@@ -1,6 +1,6 @@
-const Humanoid = require("humanoid-js"); 
-const humanoid = new Humanoid();
+const CloudflareBypasser = require('cloudflare-bypasser');
 
+let cf = new CloudflareBypasser();
 var acceptableIndexes = ["relevance","downloads","follows","newest","updated"]
 
 async function searchModrinth(text,filter,loader,version) {
@@ -28,7 +28,7 @@ async function searchModrinth(text,filter,loader,version) {
                 reject('Invalid Filter')
             }
         };
-        const res = await humanoid.get(url);
+        const res = await cf.request(url);
         var parsedData = JSON.parse(res.body);
         resolve(parsedData)
         

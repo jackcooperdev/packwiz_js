@@ -1,6 +1,6 @@
-const Humanoid = require("humanoid-js"); 
+const CloudflareBypasser = require('cloudflare-bypasser');
 const HEADER = "https://www.curseforge.com/api/v1/mods/search";
-const humanoid = new Humanoid();
+let cf = new CloudflareBypasser();
 var sortFields = {
     'Relevancy':1,
     'Popularity':2,
@@ -15,7 +15,7 @@ var loaders = {
     'Fabric':4,
     'Quilt':5,
     'NeoForge':6
-}
+};
 
 
 async function searchCurse(text,filter,loader,version) {
@@ -50,7 +50,7 @@ async function searchCurse(text,filter,loader,version) {
         if (version) {
             args += `&gameVersion=${version}`;
         }
-        const res = await humanoid.get(`${HEADER}?${args}`);
+        const res = await cf.request(`${HEADER}?${args}`);
         var parsedData = JSON.parse(res.body).data;
         resolve(parsedData)
     });
