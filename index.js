@@ -1,20 +1,8 @@
-// const axios = require('axios');
-// const { searchCurse } = require('./controllers/curseforge');
 const fs = require('fs');
-// const { searchModrinth } = require('./controllers/modrinth');
 const shell = require('shelljs');
 const { exec } = require('node:child_process');
 var toml = require('toml');
 const path = require('path')
-
-var exampleModArray = [{
-    'source': 'curseforge',
-    'slug': 'natures-compass'
-},
-{
-    'source': 'curseforge',
-    'slug': 'journeymap'
-}]
 
 
 //(Client --> "Server")
@@ -92,3 +80,6 @@ async function runPackwiz(loc, command, dir) {
         });
     })
 }
+
+
+module.exports = { runPackwiz,fileToPack,createToFile }
