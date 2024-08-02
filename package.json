@@ -1,0 +1,21 @@
+{
+  "name": "@jackcooper04/packwiz_js",
+  "version": "1.0.0",
+  "description": "Packwiz Assistant for NodeJS (Used in Cauldron)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "exports": {
+    ".":"./index.js",
+    "./curseforge":"./controllers/curseforge",
+    "./modrinth":"./controllers/modrinth"
+  },
+  "author": "JackCooper",
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "humanoid-js": "^1.0.1",
+    "shelljs": "^0.8.5",
+    "toml": "^3.0.0"
+  }
+}
