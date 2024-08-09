@@ -24,12 +24,13 @@ async function createToFile(name, version, loader, lVersion, modArray, dir, pack
         } else {
             loaderStr = `${loader}-version ${lVersion}`;
         }
-        var command = `init --author CauldronMC --${loaderStr} --mc-version ${version} --modloader ${loader} --name ${name} --version 1.0.0`;
+        var command = `init --author CauldronMC --${loaderStr} --mc-version ${version} --modloader ${loader} --name "${name}" --version 1.0.0`;
         console.log(dir)
         console.log(command)
         const create = await runPackwiz(packwizLoc, command, path.join(dir, name));
         for (idx in modArray) {
-            var modC = `${modArray[idx].source} add ${modArray[idx].slug}`;
+            console.log('MODS!')
+            var modC = `${modArray[idx].source} add --yes ${modArray[idx].slug}`;
             var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, name));
         };
         var packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
@@ -61,8 +62,9 @@ async function fileToPack(fileData,dir,packwizLoc) {
     const create = await runPackwiz(packwizLoc, command, path.join(dir, fileData.name));
     var modArray = fileData.mods;
     for (idx in modArray) {
-        var modC = `${modArray[idx].source} add ${modArray[idx].slug}`;
-        var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
+        var modC = `${modArray[idx].source} add --yes ${modArray[idx].slug}`;
+        console.log(modC)
+        //var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
     };
 };
 
@@ -70,10 +72,10 @@ async function runPackwiz(loc, command, dir) {
     return new Promise(async (resolve, reject) => {
         var child = exec(`cd ${dir} && ${loc} ${command}`);
         child.stdout.on('data', function (data) {
-            console.log('stdout: ' + data);
+            //console.log('stdout: ' + data);
         });
         child.stderr.on('data', function (data) {
-            //console.log(data)
+            console.log(data)
         });
         child.on('close', function (code) {
             resolve(code)
