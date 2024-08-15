@@ -25,11 +25,10 @@ async function createToFile(name, version, loader, lVersion, modArray, dir, pack
             loaderStr = `${loader}-version ${lVersion}`;
         }
         var command = `init --author CauldronMC --${loaderStr} --mc-version ${version} --modloader ${loader} --name "${name}" --version 1.0.0`;
-        console.log(dir)
-        console.log(command)
+        //console.log(dir)
+        //console.log(command)
         const create = await runPackwiz(packwizLoc, command, path.join(dir, name));
         for (idx in modArray) {
-            console.log('MODS!')
             var modC = `${modArray[idx].source} add --yes ${modArray[idx].slug}`;
             var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, name));
         };
@@ -63,8 +62,7 @@ async function fileToPack(fileData,dir,packwizLoc) {
     var modArray = fileData.mods;
     for (idx in modArray) {
         var modC = `${modArray[idx].source} add --yes ${modArray[idx].slug}`;
-        console.log(modC)
-        //var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
+        var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
     };
 };
 
@@ -75,7 +73,7 @@ async function runPackwiz(loc, command, dir) {
             //console.log('stdout: ' + data);
         });
         child.stderr.on('data', function (data) {
-            console.log(data)
+            //console.log(data)
         });
         child.on('close', function (code) {
             resolve(code)
