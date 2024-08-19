@@ -6,7 +6,7 @@ const path = require('path')
 
 
 //(Client --> "Server")
-async function createToFile(name, version, loader, lVersion, modArray, dir, packwizLoc) {
+async function createToFile(name, version, loader, lVersion,author,packVersion, modArray, dir, packwizLoc) {
     return new Promise(async (resolve, reject) => {
         // Create packwiz to file
         if (!packwizLoc) {
@@ -24,9 +24,9 @@ async function createToFile(name, version, loader, lVersion, modArray, dir, pack
         } else {
             loaderStr = `${loader}-version ${lVersion}`;
         }
-        var command = `init --author CauldronMC --${loaderStr} --mc-version ${version} --modloader ${loader} --name "${name}" --version 1.0.0`;
-        //console.log(dir)
-        //console.log(command)
+        var command = `init --author ${author} --${loaderStr} --mc-version ${version} --modloader ${loader} --name "${name}" --version ${packVersion}`;
+        ////console.log(dir)
+        ////console.log(command)
         const create = await runPackwiz(packwizLoc, command, path.join(dir, name));
         for (idx in modArray) {
             var modC = `${modArray[idx].source} add --yes ${modArray[idx].slug}`;
@@ -56,8 +56,7 @@ async function fileToPack(fileData,dir,packwizLoc) {
     };
     shell.mkdir('-p', path.join(dir, fileData.name));
     packwizLoc = path.resolve(packwizLoc.toString());
-
-    var command = `init --author CauldronMC --${Object.keys(fileData.versionInfo)[0]}-version ${fileData.versionInfo[Object.keys(fileData.versionInfo)[0]]} --mc-version ${fileData.versionInfo.minecraft} --modloader ${Object.keys(fileData.versionInfo)[0]} --name ${fileData.name} --version 1.0.0`;
+    var command = `init -r --author ${fileData.author} --${Object.keys(fileData.versionInfo)[0]}-version ${fileData.versionInfo[Object.keys(fileData.versionInfo)[0]]} --mc-version ${fileData.versionInfo.minecraft} --modloader ${Object.keys(fileData.versionInfo)[0]} --name ${fileData.name} --version ${fileData.version}`;
     const create = await runPackwiz(packwizLoc, command, path.join(dir, fileData.name));
     var modArray = fileData.mods;
     for (idx in modArray) {
@@ -65,6 +64,12 @@ async function fileToPack(fileData,dir,packwizLoc) {
         var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
     };
 };
+
+async function getPackVersion(name,dir) {
+    var packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
+    var packVersion = Number(packFile.version)
+    return packVersion;
+}
 
 async function runPackwiz(loc, command, dir) {
     return new Promise(async (resolve, reject) => {
@@ -82,4 +87,4 @@ async function runPackwiz(loc, command, dir) {
 }
 
 
-module.exports = { runPackwiz,fileToPack,createToFile }
+module.exports = { runPackwiz,fileToPack,createToFile, getPackVersion }

@@ -39,7 +39,7 @@ async function searchCurse(text,filter,loader,version) {
             if (!Number(loader)) {
                 if (loaders[loader]) {
                     loader = loaders[loader];
-                    console.log(loader)
+                    //console.log(loader)
                 } else {
                     reject('Invalid Loader');
                     return;
