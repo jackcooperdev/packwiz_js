@@ -66,9 +66,14 @@ async function fileToPack(fileData,dir,packwizLoc) {
 };
 
 async function getPackVersion(name,dir) {
-    var packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
-    var packVersion = Number(packFile.version)
-    return packVersion;
+    try {
+        var packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
+        var packVersion = Number(packFile.version)
+        return packVersion;
+    } catch (err) {
+        return false
+    }
+
 }
 
 async function runPackwiz(loc, command, dir) {
