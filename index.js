@@ -56,7 +56,11 @@ async function fileToPack(fileData,dir,packwizLoc) {
     };
     shell.mkdir('-p', path.join(dir, fileData.name));
     packwizLoc = path.resolve(packwizLoc.toString());
-    var command = `init -r --author ${fileData.author} --${Object.keys(fileData.versionInfo)[0]}-version ${fileData.versionInfo[Object.keys(fileData.versionInfo)[0]]} --mc-version ${fileData.versionInfo.minecraft} --modloader ${Object.keys(fileData.versionInfo)[0]} --name ${fileData.name} --version ${fileData.version}`;
+
+
+    
+    var command = `init -r --author ${fileData.author} --${fileData.loader}-version ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name} --version ${fileData.version}`;
+    console.log(command)
     const create = await runPackwiz(packwizLoc, command, path.join(dir, fileData.name));
     var modArray = fileData.mods;
     for (idx in modArray) {
@@ -71,6 +75,7 @@ async function getPackVersion(name,dir) {
         var packVersion = Number(packFile.version)
         return packVersion;
     } catch (err) {
+        console.log('FAIL')
         return false
     }
 
@@ -78,12 +83,13 @@ async function getPackVersion(name,dir) {
 
 async function runPackwiz(loc, command, dir) {
     return new Promise(async (resolve, reject) => {
+        //console.log(command)
         var child = exec(`cd ${dir} && ${loc} ${command}`);
         child.stdout.on('data', function (data) {
-            //console.log('stdout: ' + data);
+            console.log('stdout: ' + data);
         });
         child.stderr.on('data', function (data) {
-            //console.log(data)
+            console.log(data)
         });
         child.on('close', function (code) {
             resolve(code)
