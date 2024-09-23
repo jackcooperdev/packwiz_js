@@ -69,6 +69,25 @@ async function fileToPack(fileData,dir,packwizLoc) {
     };
 };
 
+
+async function getModList(packFolder) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (fs.existsSync(packFolder)) {
+                var folderFiles = fs.readdirSync(packFolder);
+                var mods  = [];
+                for (idx in folderFiles) {
+                    var fileName = toml.parse(fs.readFileSync(path.join(packFolder,folderFiles[idx]))).filename;
+                    mods.push(fileName);
+                };
+                resolve(mods);
+            }
+        } catch (err) {
+            reject(err)
+        }
+    })
+}
+
 async function getPackVersion(name,dir) {
     try {
         var packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
@@ -98,4 +117,4 @@ async function runPackwiz(loc, command, dir) {
 }
 
 
-module.exports = { runPackwiz,fileToPack,createToFile, getPackVersion }
+module.exports = { runPackwiz,fileToPack,createToFile, getPackVersion, getModList }
