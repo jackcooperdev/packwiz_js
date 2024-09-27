@@ -60,7 +60,6 @@ async function fileToPack(fileData,dir,packwizLoc) {
 
     
     var command = `init -r --author ${fileData.author} --${fileData.loader}-version ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name} --version ${fileData.version}`;
-    console.log(command)
     const create = await runPackwiz(packwizLoc, command, path.join(dir, fileData.name));
     var modArray = fileData.mods;
     for (idx in modArray) {
@@ -105,10 +104,10 @@ async function runPackwiz(loc, command, dir) {
         //console.log(command)
         var child = exec(`cd ${dir} && ${loc} ${command}`);
         child.stdout.on('data', function (data) {
-            console.log('stdout: ' + data);
+            //console.log('stdout: ' + data);
         });
         child.stderr.on('data', function (data) {
-            console.log(data)
+            //console.log(data)
         });
         child.on('close', function (code) {
             resolve(code)
