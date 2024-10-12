@@ -2,53 +2,14 @@ const fs = require('fs');
 const shell = require('shelljs');
 const { exec } = require('node:child_process');
 var toml = require('toml');
-const path = require('path')
+const path = require('path');
+const { packwizLogger } = require('./logger');
+const StreamZip = require('node-stream-zip');
 
-
-//(Client --> "Server")
-async function createToFile(name, version, loader, lVersion,author,packVersion, modArray, dir, packwizLoc) {
-    return new Promise(async (resolve, reject) => {
-        // Create packwiz to file
-        if (!packwizLoc) {
-            if (!shell.which('packwiz')) {
-                reject('No Packwiz Installed! Please Add to Path or declare manually')
-                return;
-            } else {
-                packwizLoc = shell.which('packwiz');
-            };
-        };
-        shell.mkdir('-p', path.join(dir, name));
-        packwizLoc = path.resolve(packwizLoc.toString());
-        if (!lVersion) {
-            loaderStr = `${loader}-latest`
-        } else {
-            loaderStr = `${loader}-version ${lVersion}`;
-        }
-        var command = `init --author ${author} --${loaderStr} --mc-version ${version} --modloader ${loader} --name "${name}" --version ${packVersion}`;
-        ////console.log(dir)
-        ////console.log(command)
-        const create = await runPackwiz(packwizLoc, command, path.join(dir, name));
-        for (idx in modArray) {
-            var modC = `${modArray[idx].source} add --yes ${modArray[idx].slug}`;
-            var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, name));
-        };
-        var packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
-        var exportJSON = {
-            name:name,
-            author:packFile.author,
-            versionInfo:packFile.versions,
-            mods:modArray
-        };
-        resolve(exportJSON);
-    });
-};
-
-//("Server" --> Client)
-
-async function fileToPack(fileData,dir,packwizLoc) {
+async function createPack(fileData,dir,packwizLoc) {
     if (!packwizLoc) {
         if (!shell.which('packwiz')) {
-            reject('No Packwiz Installed! Please Add to Path or declare manually')
+            reject('No Packwiz exe found! Please Add to Path or declare manually')
             return;
         } else {
             packwizLoc = shell.which('packwiz');
@@ -63,7 +24,7 @@ async function fileToPack(fileData,dir,packwizLoc) {
     const create = await runPackwiz(packwizLoc, command, path.join(dir, fileData.name));
     var modArray = fileData.mods;
     for (idx in modArray) {
-        var modC = `${modArray[idx].source} add --yes ${modArray[idx].slug}`;
+        var modC = `${modArray[idx].source} add ${modArray[idx].slug} --yes`;
         var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
     };
 };
@@ -85,6 +46,85 @@ async function getModList(packFolder) {
             reject(err)
         }
     })
+};
+
+async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOveride) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (!outputJSON) {
+                outputJSON = false;
+            };
+        
+            if (!packwizLoc) {
+                if (!shell.which('packwiz')) {
+                    reject('No Packwiz exe found! Please Add to Path or declare manually')
+                    return;
+                } else {
+                    packwizLoc = shell.which('packwiz');
+                };
+            };
+            packwizLoc = path.resolve(packwizLoc.toString());
+            // Check if zip exists
+        
+            if (!fs.existsSync(zipPath)) {
+                reject('FILENOTEXIST');
+            };
+
+            if (path.extname(zipPath) != '.zip') {
+                reject('NOTVALID');
+            };
+
+
+
+            const manifest = new StreamZip.async({ file: zipPath });
+            const manifestDataBuffer = await manifest.entryData('manifest.json');
+            const manifestFile = JSON.parse(manifestDataBuffer);
+
+            if (nameOveride) {
+                name_over = nameOveride;
+            } else {
+                name_over = manifestFile.name
+            }
+            
+            var mods = new Array();
+            var modList = manifestFile.files;
+            for (idx in modList) {
+                var newObj = {
+                    source: 'cf',
+                    slug: `--addon-id ${modList[idx].projectID} --file-id ${modList[idx].fileID}`
+                };
+                mods.push(newObj);
+            };
+
+
+            var newModPack = {
+                name:name_over,
+                friendly:manifestFile.name,
+                version:1,
+                minecraftVersion:manifestFile.minecraft.version,
+                loader:manifestFile.minecraft.modLoaders[0].id.split("-")[0],
+                loaderVersion:manifestFile.minecraft.modLoaders[0].id.split("-")[1],
+                mods:mods
+            };
+
+
+
+
+            shell.mkdir('-p', path.join(dir,name_over));
+            var command = `curseforge import ${zipPath}`;
+            await runPackwiz(packwizLoc,command,path.join(dir,name_over));
+
+            if (outputJSON) {
+                resolve(newModPack)
+            } else {
+                resolve(true);
+            };
+        } catch (err) {
+            reject(err);
+        }
+    })
+
+
 }
 
 async function getPackVersion(name,dir) {
@@ -101,19 +141,19 @@ async function getPackVersion(name,dir) {
 
 async function runPackwiz(loc, command, dir) {
     return new Promise(async (resolve, reject) => {
-        //console.log(command)
         var child = exec(`cd ${dir} && ${loc} ${command}`);
         child.stdout.on('data', function (data) {
-            //console.log('stdout: ' + data);
+            packwizLogger.info(data);
         });
         child.stderr.on('data', function (data) {
-            //console.log(data)
+            packwizLogger.error(data);
         });
         child.on('close', function (code) {
+            packwizLogger.info(`Exited with Code ${code}`);
             resolve(code)
         });
     })
-}
+};
 
 
-module.exports = { runPackwiz,fileToPack,createToFile, getPackVersion, getModList }
+module.exports = { runPackwiz,createPack, getPackVersion, getModList, importFromCurseforge }
