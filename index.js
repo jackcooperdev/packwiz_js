@@ -133,7 +133,6 @@ async function getPackVersion(name,dir) {
         var packVersion = Number(packFile.version)
         return packVersion;
     } catch (err) {
-        console.log('FAIL')
         return false
     }
 
