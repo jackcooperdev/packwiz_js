@@ -22,18 +22,18 @@ async function searchCurse(text,filter,loader,version) {
     return new Promise(async (resolve, reject) => {
         if (!text) {
             reject('Search Field Required');
-        };
+        }
         if (!filter) {
             filter = 1
-        };
+        }
         if (!Number(filter)) {
             if (sortFields[filter]) {
                 filter = sortFields[filter];
             } else {
                 reject('Invalid Sort Field');
                 return;
-            };
-        };
+            }
+        }
         let args = `gameId=432&index=0&filterText=${text}&pageSize=10&sortField=${filter}`;
         if (loader) {
             if (!Number(loader)) {
@@ -42,10 +42,10 @@ async function searchCurse(text,filter,loader,version) {
                 } else {
                     reject('Invalid Loader');
                     return;
-                };
-            };
+                }
+            }
             args += `&gameFlavors[0]=${loader}`;
-        };
+        }
         if (version) {
             args += `&gameVersion=${version}`;
         }
@@ -53,7 +53,7 @@ async function searchCurse(text,filter,loader,version) {
         let parsedData = JSON.parse(res.body).data;
         resolve(parsedData)
     });
-};
+}
 
 
 module.exports = { searchCurse }

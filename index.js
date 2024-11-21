@@ -13,8 +13,8 @@ async function createPack(fileData,dir,packwizLoc) {
             return;
         } else {
             packwizLoc = shell.which('packwiz');
-        };
-    };
+        }
+    }
     shell.mkdir('-p', path.join(dir, fileData.name));
     packwizLoc = path.resolve(packwizLoc.toString());
 
@@ -26,8 +26,8 @@ async function createPack(fileData,dir,packwizLoc) {
     for (idx in modArray) {
         let modC = `${modArray[idx].source} add ${modArray[idx].slug} --yes`;
         let addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
-    };
-};
+    }
+}
 
 
 async function getModList(packFolder) {
@@ -39,21 +39,21 @@ async function getModList(packFolder) {
                 for (idx in folderFiles) {
                     let fileName = toml.parse(fs.readFileSync(path.join(packFolder,folderFiles[idx]))).filename;
                     mods.push(fileName);
-                };
+                }
                 resolve(mods);
             }
         } catch (err) {
             reject(err)
         }
     })
-};
+}
 
 async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOveride) {
     return new Promise(async (resolve, reject) => {
         try {
             if (!outputJSON) {
                 outputJSON = false;
-            };
+            }
         
             if (!packwizLoc) {
                 if (!shell.which('packwiz')) {
@@ -61,18 +61,18 @@ async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOverid
                     return;
                 } else {
                     packwizLoc = shell.which('packwiz');
-                };
-            };
+                }
+            }
             packwizLoc = path.resolve(packwizLoc.toString());
             // Check if zip exists
         
             if (!fs.existsSync(zipPath)) {
                 reject('FILENOTEXIST');
-            };
+            }
 
             if (path.extname(zipPath) != '.zip') {
                 reject('NOTVALID');
-            };
+            }
 
 
 
@@ -94,7 +94,7 @@ async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOverid
                     slug: `--addon-id ${modList[idx].projectID} --file-id ${modList[idx].fileID}`
                 };
                 mods.push(newObj);
-            };
+            }
 
 
             let newModPack = {
@@ -118,7 +118,7 @@ async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOverid
                 resolve(newModPack)
             } else {
                 resolve(true);
-            };
+            }
         } catch (err) {
             reject(err);
         }
@@ -152,7 +152,7 @@ async function runPackwiz(loc, command, dir) {
             resolve(code)
         });
     })
-};
+}
 
 
 module.exports = { runPackwiz,createPack, getPackVersion, getModList, importFromCurseforge }

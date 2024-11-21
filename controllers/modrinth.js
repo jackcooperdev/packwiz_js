@@ -7,17 +7,17 @@ async function searchModrinth(text,filter,loader,version) {
     return new Promise(async (resolve, reject) => {
         if (!text) {
             reject('Search Field Required');
-        };
+        }
 
         let url = `https://api.modrinth.com/v2/search?query=${text}`;
 
         let facets = new Array();
         if (loader) {
             facets.push([`categories:${loader.toLowerCase()}`]);
-        };
+        }
         if (version) {
             facets.push([`versions:${version}`]);
-        };
+        }
         facets.push([`project_type:mod`]);
 
         url += `&facets=${JSON.stringify(facets)}`;
@@ -27,7 +27,7 @@ async function searchModrinth(text,filter,loader,version) {
             } else {
                 reject('Invalid Filter')
             }
-        };
+        }
         const res = await cf.request(url);
         let parsedData = JSON.parse(res.body);
         resolve(parsedData)
