@@ -1,7 +1,7 @@
 const CloudflareBypasser = require('cloudflare-bypasser');
 
 let cf = new CloudflareBypasser();
-var acceptableIndexes = ["relevance","downloads","follows","newest","updated"]
+let acceptableIndexes = ["relevance","downloads","follows","newest","updated"]
 
 async function searchModrinth(text,filter,loader,version) {
     return new Promise(async (resolve, reject) => {
@@ -9,9 +9,9 @@ async function searchModrinth(text,filter,loader,version) {
             reject('Search Field Required');
         };
 
-        var url = `https://api.modrinth.com/v2/search?query=${text}`;
+        let url = `https://api.modrinth.com/v2/search?query=${text}`;
 
-        var facets = new Array();
+        let facets = new Array();
         if (loader) {
             facets.push([`categories:${loader.toLowerCase()}`]);
         };
@@ -29,7 +29,7 @@ async function searchModrinth(text,filter,loader,version) {
             }
         };
         const res = await cf.request(url);
-        var parsedData = JSON.parse(res.body);
+        let parsedData = JSON.parse(res.body);
         resolve(parsedData)
         
     })

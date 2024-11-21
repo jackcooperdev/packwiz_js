@@ -1,7 +1,7 @@
 const CloudflareBypasser = require('cloudflare-bypasser');
 const HEADER = "https://www.curseforge.com/api/v1/mods/search";
 let cf = new CloudflareBypasser();
-var sortFields = {
+let sortFields = {
     'Relevancy':1,
     'Popularity':2,
     'Latest update':3,
@@ -10,7 +10,7 @@ var sortFields = {
     'A-Z':7
 };
 
-var loaders = {
+let loaders = {
     'Forge':1,
     'Fabric':4,
     'Quilt':5,
@@ -34,7 +34,7 @@ async function searchCurse(text,filter,loader,version) {
                 return;
             };
         };
-        var args = `gameId=432&index=0&filterText=${text}&pageSize=10&sortField=${filter}`;
+        let args = `gameId=432&index=0&filterText=${text}&pageSize=10&sortField=${filter}`;
         if (loader) {
             if (!Number(loader)) {
                 if (loaders[loader]) {
@@ -50,7 +50,7 @@ async function searchCurse(text,filter,loader,version) {
             args += `&gameVersion=${version}`;
         }
         const res = await cf.request(`${HEADER}?${args}`);
-        var parsedData = JSON.parse(res.body).data;
+        let parsedData = JSON.parse(res.body).data;
         resolve(parsedData)
     });
 };

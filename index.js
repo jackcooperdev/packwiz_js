@@ -1,7 +1,7 @@
 const fs = require('fs');
 const shell = require('shelljs');
 const { exec } = require('node:child_process');
-var toml = require('toml');
+let toml = require('toml');
 const path = require('path');
 const { packwizLogger } = require('./logger');
 const StreamZip = require('node-stream-zip');
@@ -20,12 +20,12 @@ async function createPack(fileData,dir,packwizLoc) {
 
 
     
-    var command = `init -r --author ${fileData.author} --${fileData.loader}-version ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name} --version ${fileData.version}`;
+    let command = `init -r --author ${fileData.author} --${fileData.loader}-version ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name} --version ${fileData.version}`;
     const create = await runPackwiz(packwizLoc, command, path.join(dir, fileData.name));
-    var modArray = fileData.mods;
+    let modArray = fileData.mods;
     for (idx in modArray) {
-        var modC = `${modArray[idx].source} add ${modArray[idx].slug} --yes`;
-        var addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
+        let modC = `${modArray[idx].source} add ${modArray[idx].slug} --yes`;
+        let addMod = await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
     };
 };
 
@@ -34,10 +34,10 @@ async function getModList(packFolder) {
     return new Promise(async (resolve, reject) => {
         try {
             if (fs.existsSync(packFolder)) {
-                var folderFiles = fs.readdirSync(packFolder);
-                var mods  = [];
+                let folderFiles = fs.readdirSync(packFolder);
+                let mods  = [];
                 for (idx in folderFiles) {
-                    var fileName = toml.parse(fs.readFileSync(path.join(packFolder,folderFiles[idx]))).filename;
+                    let fileName = toml.parse(fs.readFileSync(path.join(packFolder,folderFiles[idx]))).filename;
                     mods.push(fileName);
                 };
                 resolve(mods);
@@ -86,10 +86,10 @@ async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOverid
                 name_over = manifestFile.name
             }
             
-            var mods = new Array();
-            var modList = manifestFile.files;
+            let mods = new Array();
+            let modList = manifestFile.files;
             for (idx in modList) {
-                var newObj = {
+                let newObj = {
                     source: 'cf',
                     slug: `--addon-id ${modList[idx].projectID} --file-id ${modList[idx].fileID}`
                 };
@@ -97,7 +97,7 @@ async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOverid
             };
 
 
-            var newModPack = {
+            let newModPack = {
                 name:name_over,
                 friendly:manifestFile.name,
                 version:1,
@@ -111,7 +111,7 @@ async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOverid
 
 
             shell.mkdir('-p', path.join(dir,name_over));
-            var command = `curseforge import ${zipPath}`;
+            let command = `curseforge import ${zipPath}`;
             await runPackwiz(packwizLoc,command,path.join(dir,name_over));
 
             if (outputJSON) {
@@ -129,8 +129,8 @@ async function importFromCurseforge(zipPath,dir,packwizLoc,outputJSON,nameOverid
 
 async function getPackVersion(name,dir) {
     try {
-        var packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
-        var packVersion = Number(packFile.version)
+        let packFile = toml.parse(fs.readFileSync(path.join(dir, name,'pack.toml')));
+        let packVersion = Number(packFile.version)
         return packVersion;
     } catch (err) {
         return false
@@ -140,7 +140,7 @@ async function getPackVersion(name,dir) {
 
 async function runPackwiz(loc, command, dir) {
     return new Promise(async (resolve, reject) => {
-        var child = exec(`cd ${dir} && ${loc} ${command}`);
+        let child = exec(`cd ${dir} && ${loc} ${command}`);
         child.stdout.on('data', function (data) {
             packwizLogger.info(data);
         });
