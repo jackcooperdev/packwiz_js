@@ -19,5 +19,8 @@
     "node-stream-zip": "^1.15.0",
     "shelljs": "^0.8.5",
     "toml": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/shelljs": "~0.8.15"
   }
 }
