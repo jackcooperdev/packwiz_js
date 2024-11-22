@@ -11,7 +11,7 @@ async function searchModrinth(text,filter,loader,version) {
 
         let url = `https://api.modrinth.com/v2/search?query=${text}`;
 
-        let facets = new Array();
+        let facets = [];
         if (loader) {
             facets.push([`categories:${loader.toLowerCase()}`]);
         }
