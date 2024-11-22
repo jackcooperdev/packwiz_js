@@ -27,6 +27,7 @@ async function createPack(fileData, dir, packwizLoc) {
             let modC = `${modArray[idx].source} add ${modArray[idx].slug} --yes`;
             await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
         }
+        resolve(true);
     });
 }
 
@@ -120,7 +121,6 @@ async function importFromCurseforge(zipPath, dir, packwizLoc, outputJSON, nameOv
             shell.mkdir('-p', path.join(dir, name_over));
             let command = `curseforge import ${zipPath}`;
             await runPackwiz(packwizLoc, command, path.join(dir, name_over));
-
             if (outputJSON) {
                 resolve(newModPack)
             } else {
