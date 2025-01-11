@@ -2,7 +2,6 @@ const fs = require('fs');
 const shell = require('shelljs');
 const {exec} = require('node:child_process');
 const path = require('path');
-const {packwizLogger} = require('./logger');
 const { parse } = require('smol-toml')
 const StreamZip = require('node-stream-zip');
 
@@ -167,14 +166,19 @@ async function createPack(fileData, dir, packwizLoc) {
         shell.mkdir('-p', path.join(dir, fileData.name));
         packwizLoc = path.resolve(packwizLoc.toString());
 
+        if (!fileData.loaderVersion) {
+            fileData.loaderVersion = `--${fileData.loader}-latest`
+        } else {
+            fileData.loaderVersion = `--${fileData.loader}-version ${fileData.loaderVersion}`
+        }
 
-        let command = `init -r --author ${fileData.author.split(" ").join("")} --${fileData.loader}-version ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name.split(" ").join("")} --version ${fileData.version}`;
+        let command = `init -r --author ${fileData.author.split(" ").join("")} ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name.split(" ").join("")} --version ${fileData.version}`;
         console.log(command)
-        await runPackwiz(packwizLoc, command, path.join(dir, fileData.name));
+        await runPackwiz(packwizLoc, command, path.join(dir, fileData.name),true);
         let modArray = fileData.mods;
         for (let idx in modArray) {
             let modC = `${modArray[idx].source} add ${modArray[idx].slug} --yes`;
-            await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name));
+            await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name),true);
         }
         resolve(true);
     });
@@ -202,20 +206,22 @@ async function getModList(packFolder) {
 
 
 // Packwiz Runner
-async function runPackwiz(loc, command, dir) {
+async function runPackwiz(loc, command, dir,printOut) {
     return new Promise(async (resolve) => {
         fs.mkdirSync(dir, {recursive: true});
         let child = exec(`cd ${dir} && ${loc} ${command}`);
         child.stdout.on('data', function (data) {
-            console.log(data)
-            packwizLogger.info(data);
+            if (printOut) {
+                console.log(data.replace(/(\r\n|\n|\r)/gm, ""))
+            }
+
         });
         child.stderr.on('data', function (data) {
-            console.log(data)
-            packwizLogger.error(data);
+            if (printOut) {
+                console.log(data.replace(/(\r\n|\n|\r)/gm, ""))
+            }
         });
         child.on('close', function (code) {
-            packwizLogger.info(`Exited with Code ${code}`);
             resolve(code)
         });
     })
