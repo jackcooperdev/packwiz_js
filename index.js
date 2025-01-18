@@ -1,3 +1,5 @@
+// noinspection JSUnusedGlobalSymbols
+
 const fs = require('fs');
 const shell = require('shelljs');
 const {exec} = require('node:child_process');
@@ -227,4 +229,4 @@ async function runPackwiz(loc, command, dir,printOut) {
     })
 }
 
-module.exports = {runPackwiz, importFromCurseforge, getPackVersion, getModList, createPack, importFromModrinth};
+module.exports = {importFromCurseforge, getPackVersion, getModList, createPack, importFromModrinth};
