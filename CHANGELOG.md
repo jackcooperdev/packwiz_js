@@ -16,5 +16,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Started CHANGELOG.md for future changes
 
 
-[unreleased]: https://github.com/jackcooper04/packwiz_js/compare/master...development
-[1.0.3]: https://github.com/jackcooper04/packwiz_js/compare/1.0.2...1.0.3
+[unreleased]: https://github.com/jackcooperdev/packwiz_js/compare/master...development
+[1.0.3]: https://github.com/jackcooperdev/packwiz_js/compare/1.0.2...1.0.3

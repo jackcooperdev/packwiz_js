@@ -1,6 +1,6 @@
 # packwiz_js
 
-> This Documentation is correct for version [1.0.3](https://github.com/jackcooper04/packwiz_js/releases/tag/1.0.3) of packwiz_js
+> This Documentation is correct for version [1.0.3](https://github.com/jackcooperdev/packwiz_js/releases/tag/1.0.3) of packwiz_js
 
 ## What does this do?
 Packwiz is a command line tool for creating Minecraft modpacks.
@@ -18,7 +18,7 @@ This project is licensed under [GPL 3.0](https://choosealicense.com/licenses/gpl
 2. Install the package with the command below.
 
 ```
-npm i @jackcooper04/packwiz_js
+npm i @jackcooperdev/packwiz_js
 ```
 
 ## Functions
