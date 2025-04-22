@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.4] - 22-04-2025
+## [1.0.5] - 22-04-2025
 
 ### Changed
 - Migrated From CommonJS To ESM
@@ -21,4 +21,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [unreleased]: https://github.com/jackcooperdev/packwiz_js/compare/master...development
 [1.0.3]: https://github.com/jackcooperdev/packwiz_js/compare/1.0.2...1.0.3
-[1.0.3]: https://github.com/jackcooperdev/packwiz_js/compare/1.0.3...1.0.4
+[1.0.5]: https://github.com/jackcooperdev/packwiz_js/compare/1.0.3...1.0.5
