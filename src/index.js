@@ -16,9 +16,7 @@ async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
             if (!packwizLoc) {
                 console.log("no");
                 if (!shell.which("packwiz")) {
-                    reject(
-                        "No Packwiz exe found! Please Add to Path or declare manually...",
-                    );
+                    reject("No Packwiz exe found! Please Add to Path or declare manually...",);
                     return;
                 } else {
                     packwizLoc = shell.which("packwiz");
@@ -76,19 +74,12 @@ async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
 
             // Extract Overrides
             shell.mkdir("-p", path.join(outPath, name_over, "overrides"));
-            await zip.extract(
-                "overrides",
-                path.join(outPath, name_over, "overrides"),
-            );
+            await zip.extract("overrides", path.join(outPath, name_over, "overrides"),);
             // Sync Index
             await runPackwiz(packwizLoc, "refresh", path.join(outPath, name_over));
 
             for (let idx in manifest.files) {
-                await runPackwiz(
-                    packwizLoc,
-                    `mr add ${manifest.files[idx].downloads[0]} --yes`,
-                    path.join(outPath, name_over),
-                );
+                await runPackwiz(packwizLoc, `mr add ${manifest.files[idx].downloads[0]} --yes`, path.join(outPath, name_over),);
             }
 
             let packInfo = await getPackInfo(path.join(outPath, name_over));
@@ -100,19 +91,12 @@ async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
 }
 
 // Import From CurseForge (.zip)
-async function importFromCurseforge(
-    zipPath,
-    outPath,
-    packwizLoc,
-    nameOverride,
-) {
+async function importFromCurseforge(zipPath, outPath, packwizLoc, nameOverride,) {
     return new Promise(async (resolve, reject) => {
         try {
             if (!packwizLoc) {
                 if (!shell.which("packwiz")) {
-                    reject(
-                        "No Packwiz exe found! Please Add to Path or declare manually",
-                    );
+                    reject("No Packwiz exe found! Please Add to Path or declare manually",);
                     return;
                 } else {
                     packwizLoc = shell.which("packwiz");
@@ -149,9 +133,7 @@ async function importFromCurseforge(
 async function getPackInfo(dir) {
     return new Promise(async (resolve, reject) => {
         try {
-            let packFile = parse(
-                fs.readFileSync(path.join(dir, "pack.toml")).toString(),
-            );
+            let packFile = parse(fs.readFileSync(path.join(dir, "pack.toml")).toString(),);
             resolve(packFile);
         } catch (err) {
             reject(err);
@@ -161,9 +143,7 @@ async function getPackInfo(dir) {
 
 async function getPackVersion(name, dir) {
     try {
-        let packFile = parse(
-            fs.readFileSync(path.join(dir, name, "pack.toml")).toString(),
-        );
+        let packFile = parse(fs.readFileSync(path.join(dir, name, "pack.toml")).toString(),);
         return packFile.version;
     } catch (err) {
         return false;
@@ -190,7 +170,6 @@ async function createPack(fileData, dir, packwizLoc) {
         }
 
         let command = `init -r --author ${fileData.author.split(" ").join("")} ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name.split(" ").join("")} --version ${fileData.version}`;
-        console.log(command);
         await runPackwiz(packwizLoc, command, path.join(dir, fileData.name), true);
         let modArray = fileData.mods;
         for (let idx in modArray) {
@@ -209,9 +188,7 @@ async function getModList(packFolder) {
                 let folderFiles = fs.readdirSync(packFolder);
                 let mods = [];
                 for (let idx in folderFiles) {
-                    let fileName = parse(
-                        fs.readFileSync(path.join(packFolder, folderFiles[idx])).toString(),
-                    ).filename;
+                    let fileName = parse(fs.readFileSync(path.join(packFolder, folderFiles[idx])).toString(),).filename;
                     mods.push(fileName);
                 }
                 resolve(mods);
@@ -244,9 +221,5 @@ async function runPackwiz(loc, command, dir, printOut) {
 }
 
 export {
-    importFromCurseforge,
-    getPackVersion,
-    getModList,
-    createPack,
-    importFromModrinth,
+    importFromCurseforge, getPackVersion, getModList, createPack, importFromModrinth,
 };
