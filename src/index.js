@@ -185,16 +185,18 @@ async function getModList(packFolder) {
         try {
             if (fs.existsSync(packFolder)) {
                 packFolder = path.join(packFolder, "mods");
+                console.log(packFolder);
                 let folderFiles = fs.readdirSync(packFolder);
                 let mods = [];
                 for (let idx in folderFiles) {
+                    console.log(folderFiles[idx])
                     let fileName = parse(fs.readFileSync(path.join(packFolder, folderFiles[idx])).toString(),).filename;
                     mods.push(fileName);
                 }
                 resolve(mods);
             }
         } catch (err) {
-            reject(err);
+            resolve(["notamod.jar"]);
         }
     });
 }
