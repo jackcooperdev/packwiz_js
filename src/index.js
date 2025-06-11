@@ -1,88 +1,89 @@
 // noinspection JSUnusedGlobalSymbols
 
-import fs from "fs";
+const fs = require("fs");
+const path = require("path");
+const { exec } = require("node:child_process"); // Node.js v16+ allows "node:" prefix for built-in modules
+const { parse } = require("smol-toml");
+const StreamZip = require("node-stream-zip");
 
-import shell from "shelljs";
-import {exec} from "node:child_process";
-import path from "path";
-import {parse} from "smol-toml";
-import StreamZip from "node-stream-zip";
+// Native helper to replace shell.which
+function which(cmd) {
+    return new Promise((resolve) => {
+        exec(`which ${cmd}`, (err, stdout) => {
+            if (err || !stdout) {
+                resolve(null);
+            } else {
+                resolve(stdout.trim());
+            }
+        });
+    });
+}
 
 // Import From Modrinth (.mrpack)
-
 async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
     return new Promise(async (resolve, reject) => {
         try {
             if (!packwizLoc) {
                 console.log("no");
-                if (!shell.which("packwiz")) {
-                    reject("No Packwiz exe found! Please Add to Path or declare manually...",);
+                packwizLoc = await which("packwiz");
+                if (!packwizLoc) {
+                    reject("No Packwiz exe found! Please Add to Path or declare manually...");
                     return;
-                } else {
-                    packwizLoc = shell.which("packwiz");
                 }
             }
             packwizLoc = path.resolve(packwizLoc.toString());
-            // Check if zip exists
+
             if (!fs.existsSync(mrPath)) {
                 reject("FILE_NOT_EXIST");
+                return;
             }
 
-            // Check if is ZIP
             if (path.extname(mrPath) !== ".mrpack") {
                 reject("NOT_VALID_MRPACK");
+                return;
             }
 
-            const zip = new StreamZip.async({file: mrPath});
+            const zip = new StreamZip.async({ file: mrPath });
             const manifestRaw = await zip.entryData("modrinth.index.json");
-            let manifest = JSON.parse(manifestRaw);
-            let name_over;
-            if (nameOverride) {
-                name_over = nameOverride;
-            } else {
-                name_over = manifest.name;
-            }
-            shell.mkdir("-p", path.join(outPath, name_over));
-            // Create Pack Info
+            const manifest = JSON.parse(manifestRaw);
+            const name_over = nameOverride || manifest.name;
 
-            let projectDeps = manifest.dependencies;
-            let depKeys = Object.keys(projectDeps);
-            let loader = "";
-            let loaderVersion = "";
-            let mcVersion = "";
+            fs.mkdirSync(path.join(outPath, name_over), { recursive: true });
 
-            for (let idx in depKeys) {
-                if (depKeys[idx] === "minecraft") {
-                    mcVersion = projectDeps[depKeys[idx]];
+            const projectDeps = manifest.dependencies;
+            const depKeys = Object.keys(projectDeps);
+            let loader = "", loaderVersion = "", mcVersion = "";
+
+            for (let key of depKeys) {
+                if (key === "minecraft") {
+                    mcVersion = projectDeps[key];
                 } else {
-                    loader = depKeys[idx];
-                    loaderVersion = projectDeps[depKeys[idx]];
+                    loader = key;
+                    loaderVersion = projectDeps[key];
                 }
             }
 
-            let newPackInfo = {
+            const newPackInfo = {
                 author: "John Doe",
-                loader: loader,
-                loaderVersion: loaderVersion,
+                loader,
+                loaderVersion,
                 minecraftVersion: mcVersion,
                 name: name_over,
                 version: 1,
             };
 
-            //Create Pack
             await createPack(newPackInfo, path.join(outPath), packwizLoc);
 
-            // Extract Overrides
-            shell.mkdir("-p", path.join(outPath, name_over, "overrides"));
-            await zip.extract("overrides", path.join(outPath, name_over, "overrides"),);
-            // Sync Index
+            fs.mkdirSync(path.join(outPath, name_over, "overrides"), { recursive: true });
+            await zip.extract("overrides", path.join(outPath, name_over, "overrides"));
+
             await runPackwiz(packwizLoc, "refresh", path.join(outPath, name_over));
 
-            for (let idx in manifest.files) {
-                await runPackwiz(packwizLoc, `mr add ${manifest.files[idx].downloads[0]} --yes`, path.join(outPath, name_over),);
+            for (let file of manifest.files) {
+                await runPackwiz(packwizLoc, `mr add ${file.downloads[0]} --yes`, path.join(outPath, name_over));
             }
 
-            let packInfo = await getPackInfo(path.join(outPath, name_over));
+            const packInfo = await getPackInfo(path.join(outPath, name_over));
             resolve(packInfo);
         } catch (e) {
             reject(e);
@@ -91,38 +92,35 @@ async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
 }
 
 // Import From CurseForge (.zip)
-async function importFromCurseforge(zipPath, outPath, packwizLoc, nameOverride,) {
+async function importFromCurseforge(zipPath, outPath, packwizLoc, nameOverride) {
     return new Promise(async (resolve, reject) => {
         try {
             if (!packwizLoc) {
-                if (!shell.which("packwiz")) {
-                    reject("No Packwiz exe found! Please Add to Path or declare manually",);
+                packwizLoc = await which("packwiz");
+                if (!packwizLoc) {
+                    reject("No Packwiz exe found! Please Add to Path or declare manually");
                     return;
-                } else {
-                    packwizLoc = shell.which("packwiz");
                 }
             }
             packwizLoc = path.resolve(packwizLoc.toString());
-            // Check if zip exists
 
             if (!fs.existsSync(zipPath)) {
                 reject("FILE_NOT_EXIST");
+                return;
             }
 
-            // Check if is ZIP
             if (path.extname(zipPath) !== ".zip") {
                 reject("NOT_VALID_ZIP");
+                return;
             }
-            let name_over;
-            if (nameOverride) {
-                name_over = nameOverride;
-            } else {
-                name_over = path.parse(zipPath).name;
-            }
-            shell.mkdir("-p", path.join(outPath, name_over));
-            let command = `curseforge import ${zipPath}`;
+
+            const name_over = nameOverride || path.parse(zipPath).name;
+            fs.mkdirSync(path.join(outPath, name_over), { recursive: true });
+
+            const command = `curseforge import ${zipPath}`;
             await runPackwiz(packwizLoc, command, path.join(outPath, name_over));
-            let packInfo = await getPackInfo(path.join(outPath, name_over));
+
+            const packInfo = await getPackInfo(path.join(outPath, name_over));
             resolve(packInfo);
         } catch (err) {
             reject(err);
@@ -131,9 +129,9 @@ async function importFromCurseforge(zipPath, outPath, packwizLoc, nameOverride,)
 }
 
 async function getPackInfo(dir) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
         try {
-            let packFile = parse(fs.readFileSync(path.join(dir, "pack.toml")).toString(),);
+            const packFile = parse(fs.readFileSync(path.join(dir, "pack.toml")).toString());
             resolve(packFile);
         } catch (err) {
             reject(err);
@@ -143,7 +141,7 @@ async function getPackInfo(dir) {
 
 async function getPackVersion(name, dir) {
     try {
-        let packFile = parse(fs.readFileSync(path.join(dir, name, "pack.toml")).toString(),);
+        const packFile = parse(fs.readFileSync(path.join(dir, name, "pack.toml")).toString());
         return packFile.version;
     } catch (err) {
         return false;
@@ -153,47 +151,49 @@ async function getPackVersion(name, dir) {
 async function createPack(fileData, dir, packwizLoc) {
     return new Promise(async (resolve, reject) => {
         if (!packwizLoc) {
-            if (!shell.which("packwiz")) {
+            packwizLoc = await which("packwiz");
+            if (!packwizLoc) {
                 reject("No Packwiz exe found! Please Add to Path or declare manually");
                 return;
-            } else {
-                packwizLoc = shell.which("packwiz");
             }
         }
-        shell.mkdir("-p", path.join(dir, fileData.name));
+
+        const packPath = path.join(dir, fileData.name);
+        fs.mkdirSync(packPath, { recursive: true });
         packwizLoc = path.resolve(packwizLoc.toString());
 
-        if (!fileData.loaderVersion) {
-            fileData.loaderVersion = `--${fileData.loader}-latest`;
-        } else {
-            fileData.loaderVersion = `--${fileData.loader}-version ${fileData.loaderVersion}`;
+        const loaderVer = fileData.loaderVersion
+            ? `--${fileData.loader}-version ${fileData.loaderVersion}`
+            : `--${fileData.loader}-latest`;
+
+        const command = `init -r --author ${fileData.author.replace(/\s/g, "")} ${loaderVer} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name.replace(/\s/g, "")} --version ${fileData.version}`;
+
+        await runPackwiz(packwizLoc, command, packPath, true);
+
+        if (fileData.mods) {
+            for (let mod of fileData.mods) {
+                const modCmd = `${mod.source} add ${mod.slug} --yes`;
+                await runPackwiz(packwizLoc, modCmd, packPath, true);
+            }
         }
 
-        let command = `init -r --author ${fileData.author.split(" ").join("")} ${fileData.loaderVersion} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name.split(" ").join("")} --version ${fileData.version}`;
-        await runPackwiz(packwizLoc, command, path.join(dir, fileData.name), true);
-        let modArray = fileData.mods;
-        for (let idx in modArray) {
-            let modC = `${modArray[idx].source} add ${modArray[idx].slug} --yes`;
-            await runPackwiz(packwizLoc, modC, path.join(dir, fileData.name), true);
-        }
         resolve(true);
     });
 }
 
 async function getModList(packFolder) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve) => {
         try {
-            if (fs.existsSync(packFolder)) {
-                packFolder = path.join(packFolder, "mods");
-                console.log(packFolder);
-                let folderFiles = fs.readdirSync(packFolder);
-                let mods = [];
-                for (let idx in folderFiles) {
-                    console.log(folderFiles[idx])
-                    let fileName = parse(fs.readFileSync(path.join(packFolder, folderFiles[idx])).toString(),).filename;
-                    mods.push(fileName);
-                }
+            const modsDir = path.join(packFolder, "mods");
+            if (fs.existsSync(modsDir)) {
+                const files = fs.readdirSync(modsDir);
+                const mods = files.map((file) => {
+                    const fileData = parse(fs.readFileSync(path.join(modsDir, file)).toString());
+                    return fileData.filename;
+                });
                 resolve(mods);
+            } else {
+                resolve([]);
             }
         } catch (err) {
             resolve(["notamod.jar"]);
@@ -202,26 +202,24 @@ async function getModList(packFolder) {
 }
 
 // Packwiz Runner
-async function runPackwiz(loc, command, dir, printOut) {
-    return new Promise(async (resolve) => {
-        fs.mkdirSync(dir, {recursive: true});
-        let child = exec(`cd ${dir} && ${loc} ${command}`);
-        child.stdout.on("data", function (data) {
-            if (printOut) {
-                console.log(data.replace(/(\r\n|\n|\r)/gm, ""));
-            }
+async function runPackwiz(loc, command, dir, printOut = false) {
+    return new Promise((resolve) => {
+        fs.mkdirSync(dir, { recursive: true });
+        const child = exec(`cd ${dir} && ${loc} ${command}`);
+        child.stdout.on("data", (data) => {
+            if (printOut) console.log(data.trim());
         });
-        child.stderr.on("data", function (data) {
-            if (printOut) {
-                console.log(data.replace(/(\r\n|\n|\r)/gm, ""));
-            }
+        child.stderr.on("data", (data) => {
+            if (printOut) console.log(data.trim());
         });
-        child.on("close", function (code) {
-            resolve(code);
-        });
+        child.on("close", (code) => resolve(code));
     });
 }
 
-export {
-    importFromCurseforge, getPackVersion, getModList, createPack, importFromModrinth,
+module.exports = {
+    importFromCurseforge,
+    getPackVersion,
+    getModList,
+    createPack,
+    importFromModrinth,
 };
