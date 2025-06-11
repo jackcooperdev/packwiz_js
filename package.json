@@ -1,7 +1,7 @@
 {
   "name": "@jackcooperdev/packwiz_js",
   "version": "1.0.7",
-  "type": "module",
+  "type": "commonjs",
   "description": "Packwiz Assistant for NodeJS (Used in Cauldron)",
   "main": "src/index.js",
   "scripts": {
@@ -14,10 +14,6 @@
   "license": "GPL-3.0-only",
   "dependencies": {
     "node-stream-zip": "^1.15.0",
-    "shelljs": "^0.8.5",
     "smol-toml": "^1.3.1"
-  },
-  "devDependencies": {
-    "@types/shelljs": "~0.8.15"
   }
 }
