@@ -1,6 +1,6 @@
 # packwiz_js
 
-> This Documentation is correct for version [1.0.5](https://github.com/jackcooperdev/packwiz_js/releases/tag/1.0.3) of
+> This Documentation is correct for version [1.0.8](https://github.com/jackcooperdev/packwiz_js/releases/tag/1.0.8) of
 > packwiz_js
 
 ## What does this do?
