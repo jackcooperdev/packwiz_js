@@ -19,12 +19,19 @@ function which(cmd) {
     });
 }
 
+function getFileNamesFromToml(dir) {
+    return fs.readdirSync(dir).flatMap((file) => {
+        if (!file.endsWith('.toml')) return [];
+        const fileData = parse(fs.readFileSync(path.join(dir, file)).toString());
+        return fileData.filename ? [fileData.filename] : [];
+    });
+}
+
 // Import From Modrinth (.mrpack)
 async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
     return new Promise(async (resolve, reject) => {
         try {
             if (!packwizLoc) {
-                console.log("no");
                 packwizLoc = await which("packwiz");
                 if (!packwizLoc) {
                     reject("No Packwiz exe found! Please Add to Path or declare manually...");
@@ -58,7 +65,12 @@ async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
                 if (key === "minecraft") {
                     mcVersion = projectDeps[key];
                 } else {
-                    loader = key;
+                    if (key.includes('loader')) {
+                        let temp = key.split("-");
+                        loader = temp[0]
+                    } else {
+                        loader = key;
+                    }
                     loaderVersion = projectDeps[key];
                 }
             }
@@ -71,7 +83,10 @@ async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
                 name: name_over,
                 version: 1,
             };
-
+            let currentMods = [];
+            if (fs.existsSync(path.join(outPath, name_over, 'mods'))) {
+                currentMods = await getFileNamesFromToml(path.join(outPath, name_over, 'mods'))
+            }
             await createPack(newPackInfo, path.join(outPath), packwizLoc);
 
             fs.mkdirSync(path.join(outPath, name_over, "overrides"), { recursive: true });
@@ -80,7 +95,15 @@ async function importFromModrinth(mrPath, outPath, packwizLoc, nameOverride) {
             await runPackwiz(packwizLoc, "refresh", path.join(outPath, name_over));
 
             for (let file of manifest.files) {
-                await runPackwiz(packwizLoc, `mr add ${file.downloads[0]} --yes`, path.join(outPath, name_over));
+                let temp = file.path.replace('mods/', '');
+                let modExists = false;
+                if (currentMods.includes(temp)) {
+                    modExists = true;
+                }
+                if (!modExists) {
+                    await runPackwiz(packwizLoc, `mr add ${file.downloads[0]} --yes`, path.join(outPath, name_over));
+                }
+
             }
 
             const packInfo = await getPackInfo(path.join(outPath, name_over));
@@ -167,7 +190,6 @@ async function createPack(fileData, dir, packwizLoc) {
             : `--${fileData.loader}-latest`;
 
         const command = `init -r --author ${fileData.author.replace(/\s/g, "")} ${loaderVer} --mc-version ${fileData.minecraftVersion} --modloader ${fileData.loader} --name ${fileData.name.replace(/\s/g, "")} --version ${fileData.version}`;
-
         await runPackwiz(packwizLoc, command, packPath, true);
 
         if (fileData.mods) {
@@ -187,10 +209,10 @@ async function getModList(packFolder) {
             const modsDir = path.join(packFolder, "mods");
             if (fs.existsSync(modsDir)) {
                 const files = fs.readdirSync(modsDir);
-                const mods = files.map((file) => {
-                    const fileData = parse(fs.readFileSync(path.join(modsDir, file)).toString());
-                    return fileData.filename;
-                });
+                const mods = files
+                    .map((file) => parse(fs.readFileSync(path.join(modsDir, file)).toString()))
+                    .filter((fileData) => fileData.side === 'client' || fileData.side === 'both')
+                    .map((fileData) => fileData.filename);
                 resolve(mods);
             } else {
                 resolve([]);
